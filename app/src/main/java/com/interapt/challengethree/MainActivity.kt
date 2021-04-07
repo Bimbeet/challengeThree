@@ -1,9 +1,11 @@
 package com.interapt.challengethree
 
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.location.Location
-import android.location.LocationManager
 import android.location.LocationListener
+import android.location.LocationManager
+import android.net.Uri
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -75,7 +77,11 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == 99) {
             when (grantResults[0]) {
@@ -98,7 +104,7 @@ class MainActivity : AppCompatActivity() {
     private var proxRadius = 809
     var latitude by Delegates.notNull<Double>()
     var longitude by Delegates.notNull<Double>()
-    fun onSearchTouch(v: View?) {
+    fun onSearchTouch(view: View?) {
         if (binding.radiusInput.text.toString().isNotEmpty()) {
             proxRadius = if (1609 * binding.radiusInput.text.toString().toInt() < 46000) {
                 1609 * binding.radiusInput.text.toString().toInt()
@@ -120,8 +126,7 @@ class MainActivity : AppCompatActivity() {
         try {
             locationManager.requestLocationUpdates(
                 LocationManager.NETWORK_PROVIDER,
-                50000L,
-                0f,
+                50000L, 0f,
                 locationListener
             )
         } catch (ex: SecurityException) {
@@ -129,8 +134,8 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    var placeIndex = 0
-    var placeReqResults: JSONObject? = null
+    private var placeIndex = 0
+    private var placeReqResults: JSONObject? = null
     private fun preformPlaceRequest() {
         val googlePlacesUrl =
             StringBuilder("https://maps.googleapis.com/maps/api/place/nearbysearch/json?")
@@ -156,7 +161,7 @@ class MainActivity : AppCompatActivity() {
         requestQueue.add(jsonObjectRequest)
     }
 
-    var finalAddress: String? = null
+    private var finalAddress: String? = null
     private var currentPlacesArray = JSONArray()
     private var doOnce = false
     private fun parseLocationResult(result: JSONObject) {
@@ -259,17 +264,45 @@ class MainActivity : AppCompatActivity() {
                     finalAddress = address
                     binding.addressDisplay.text = finalAddress
                     binding.addressDisplay.visibility = View.VISIBLE
-//                    binding.mapButton.setVisibility(View.INVISIBLE)
+                    binding.mapButton.visibility = View.INVISIBLE
                 } else {
                     binding.addressDisplay.visibility = View.INVISIBLE
-//                    binding.mapButton.setVisibility(View.VISIBLE)
+                    binding.mapButton.visibility = View.VISIBLE
                 }
             }
         }
     }
 
+    fun onAddressClick(view: View?) {
+        showAddress(Uri.encode(finalAddress))
+    }
+
+    private fun showAddress(geoUri: String) {
+        // not working
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse(geoUri)
+        if (intent.resolveActivity(packageManager) != null) {
+            Log.i("debugy", "intent hit, should move to map")
+            startActivity(intent)
+        }
+    }
+
+    fun showMap(view: View?) {
+        val intent = Intent(Intent.ACTION_VIEW)
+        intent.data = Uri.parse("geo:$latitude%2C$longitude(restaurant)")
+        if (intent.resolveActivity(packageManager) != null) {
+            Log.i("debugy", "intent hit, should move to map")
+            startActivity(intent)
+        }
+    }
+
     fun nextPlace(view: View?) {
         placeIndex++
+        parseLocationResult(placeReqResults!!)
+    }
+
+    fun prevPlace(view: View?) {
+        placeIndex--
         parseLocationResult(placeReqResults!!)
     }
 }

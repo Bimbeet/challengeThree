@@ -2,4 +2,6 @@
     <string name="app_name">Challenge Three</string>
     <string name="instructions">Enter a search radius to begin looking for a place to eat.</string>
     <string name="search">Search</string>
+    <string name="next">Next</string>
+    <string name="showGMaps">Show in Google Maps</string>
 </resources>
