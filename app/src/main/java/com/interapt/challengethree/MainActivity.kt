@@ -1,12 +1,10 @@
 package com.interapt.challengethree
 
-import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.location.LocationListener
 import android.os.Bundle
-import android.os.HandlerThread
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -41,7 +39,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var placesClient: PlacesClient
     private lateinit var requestQueue: RequestQueue
     private lateinit var locationManager: LocationManager
-    private lateinit var locationListener: LocationListener
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -59,6 +56,8 @@ class MainActivity : AppCompatActivity() {
         placesClient = Places.createClient(this)
 //        this.locationManager.getCurrentLocation()
 //        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+        locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
 
         if (ContextCompat.checkSelfPermission(
                 applicationContext,
@@ -78,23 +77,24 @@ class MainActivity : AppCompatActivity() {
         )
     }
 
-    override fun onRequestPermissionsResult(
-        requestCode: Int,
-        permissions: Array<String>,
-        grantResults: IntArray
-    ) {
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        when (requestCode) {
-            99 -> {
-                if ((grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED)) {
-                    binding.cLayoutMain.isClickable = true
-                } else {
-//                    showInContextUI()
-                    Log.e("debugy", "failed permission grant")
-                }
-                return
+        if (requestCode == 99) {
+            when (grantResults[0]) {
+                PackageManager.PERMISSION_GRANTED -> binding.cLayoutMain.isClickable = true
+                PackageManager.PERMISSION_DENIED -> Log.e("debugy", "failed permission grant")
             }
         }
+    }
+
+    private val locationListener: LocationListener = object : LocationListener {
+        override fun onLocationChanged(location: Location) {
+            latitude = location.latitude
+            longitude = location.longitude
+            Log.i("debugy", "Latitute: $latitude ; Longitute: $longitude")
+            preformPlaceRequest()
+        }
+        override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
     }
 
     private lateinit var fusedLocationClient: FusedLocationProviderClient
@@ -120,23 +120,15 @@ class MainActivity : AppCompatActivity() {
             return
         }
 
-        Log.i("debug", "trying location request!!!")
         try {
-            locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-            locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
-            locationListener = LocationListener { location ->
-                latitude = location.latitude
-                longitude = location.longitude
-                Log.i("debugy", "Latitute: $latitude ; Longitute: $longitude")
-            }
             locationManager.requestLocationUpdates(
                 LocationManager.NETWORK_PROVIDER,
                 50000L,
                 0f,
                 locationListener
             )
-            preformPlaceRequest()
         } catch (ex: SecurityException) {
+            Log.d("debugy", "Security Exception, no location available")
         }
 //        fusedLocationClient.lastLocation
 //            .addOnSuccessListener { location: Location? ->
