@@ -32,7 +32,6 @@ import org.json.JSONObject
 import java.util.*
 import kotlin.properties.Delegates
 
-
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private val apiKey = ""
@@ -54,8 +53,7 @@ class MainActivity : AppCompatActivity() {
 
         Places.initialize(this, apiKey)
         placesClient = Places.createClient(this)
-//        this.locationManager.getCurrentLocation()
-//        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+
         locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)
 
@@ -97,7 +95,6 @@ class MainActivity : AppCompatActivity() {
         override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {}
     }
 
-    private lateinit var fusedLocationClient: FusedLocationProviderClient
     private var proxRadius = 809
     var latitude by Delegates.notNull<Double>()
     var longitude by Delegates.notNull<Double>()
@@ -128,29 +125,8 @@ class MainActivity : AppCompatActivity() {
                 locationListener
             )
         } catch (ex: SecurityException) {
-            Log.d("debugy", "Security Exception, no location available")
+            Log.e("debugy", "Security Exception, no location available")
         }
-//        fusedLocationClient.lastLocation
-//            .addOnSuccessListener { location: Location? ->
-//                if (location != null) {
-//                    Log.d("debugy", "location : $location")
-//                    latitude = location.latitude
-//                    longitude = location.longitude
-//                    Log.i("debugy", "lat/long : $latitude/$longitude")
-//                    preformPlaceRequest()
-//                } else {
-//                    Log.i("debug", "trying location request!!!")
-//                    try {
-//                        locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 50000L, 0f, locationListener)
-//                        locationListener = LocationListener { newLocation ->
-//                            latitude = newLocation.latitude
-//                            longitude = newLocation.longitude
-//                            Log.i("debugy", "Latitute: $latitude ; Longitute: $longitude")
-//                        }
-//                        preformPlaceRequest()
-//                    } catch (ex:SecurityException) {}
-//                }
-//            }
     }
 
     var placeIndex = 0
@@ -183,14 +159,13 @@ class MainActivity : AppCompatActivity() {
     var finalAddress: String? = null
     private var currentPlacesArray = JSONArray()
     private var doOnce = false
-
     private fun parseLocationResult(result: JSONObject) {
         var name: String? = null
         var address: String? = null
         var placeID: String? = null
         try {
             val placesResultsArray = result.getJSONArray("results")
-//            Log.i("debugy", "placesResultsArray : $placesResultsArray")
+            Log.i("debugy", "placesResultsArray : $placesResultsArray")
             if (!doOnce) {
                 for (resultsIndex in 0 until placesResultsArray.length()) {
 //                    Log.d("debugy", "placesResultsArray.getJSONObject(i) - " + placesResultsArray.getJSONObject(resultsIndex).toString())
@@ -213,12 +188,6 @@ class MainActivity : AppCompatActivity() {
             }
             try {
                 name = currentPlacesArray.getJSONObject(placeIndex).getString("name")
-//                if (!prevPlacesArray.getJSONObject(placeIndex).getString("name").contains(name)) {
-//                    prevPlacesArray.add(placesResultsArray.getString(i))
-//                } else {
-//                    placeIndex++
-//                    name = placesResultsArray.getJSONObject(placeIndex).getString("name")
-//                }
                 Log.i("debugy", "JSON object: name - $name")
             } catch (e: JSONException) {
                 e.printStackTrace()
